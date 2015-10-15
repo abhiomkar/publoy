@@ -36,9 +36,8 @@
 
 # able to clone & sync projects from droploy on other computers
 
-echo ">>> Droploying..."
-
 API_REQUEST_TOKEN_URL="https://api.dropbox.com/1/oauth/request_token"
+API_ACCESS_TOKEN_URL="https://api.dropbox.com/1/oauth/access_token"
 API_USER_AUTH_URL="https://www.dropbox.com/1/oauth/authorize"
 API_INFO_URL="https://api.dropbox.com/1/account/info"
 APPKEY=1vn4mbkqqsxf3ds
@@ -126,6 +125,17 @@ function check_http_response
 }
 
 # create droploy supporting files & folders
+DROPBOX_ROOT="$HOME/Dropbox"
+if [ ! -d $DROPBOX_ROOT ]
+then
+    echo "Dropbox is not installed in your system? Exiting."
+    ERROR_STATUS=1
+
+    exit $ERROR_STATUS
+fi
+
+echo ">>> Droploying..."
+
 PUBLIC_ROOT="$HOME/Dropbox/Public"
 [ ! -d $PUBLIC_ROOT ] && mkdir -p $PUBLIC_ROOT
 [ ! -d $DROPLOY_ROOT ] && mkdir -p $DROPLOY_ROOT
@@ -170,6 +180,24 @@ then
 	echo "$PROJECT_NAME:$SOURCE:$TARGET" >> $DROPLOY_METAFILE
 fi
 
+if [ -f "$SOURCE/index.html" ]
+then
+    INDEX_FILE='index.html'
+else
+    # if we could'nt find index.html, the first .html file would our index file
+    INDEX_FILE=$(find . -type f -maxdepth 1 -iname '*.html' | sed 's/^.\///' | head -n 1)
+fi
+
+if [[ $INDEX_FILE == "" ]]
+then
+    ERROR_STATUS=1
+
+    echo ""
+    echo -ne "No 'index.html' file. Exiting."
+    echo ""
+    exit $ERROR_STATUS
+fi
+
 [ ! -d $TARGET ] && mkdir -p $TARGET
 
 echo ">>> Syncing to Dropbox..."
@@ -189,9 +217,6 @@ else
     OAUTH_TOKEN_SECRET=$(sed -n 's/oauth_token_secret=\([a-z A-Z 0-9]*\).*/\1/p' "$RESPONSE_FILE")
     OAUTH_TOKEN=$(sed -n 's/.*oauth_token=\([a-z A-Z 0-9]*\)/\1/p' "$RESPONSE_FILE")
 
-    echo "OAUTH_TOKEN_SECRET: $OAUTH_TOKEN_SECRET"
-    echo "OAUTH_TOKEN: $OAUTH_TOKEN"
-
     if [[ $OAUTH_TOKEN != "" && $OAUTH_TOKEN_SECRET != "" ]]; then
         echo -ne "\n Please open the following URL in your browser, and allow Droployer\n"
         echo -ne " to access your Dropbox Public folder:\n\n --> ${API_USER_AUTH_URL}?oauth_token=$OAUTH_TOKEN\n"
@@ -204,9 +229,6 @@ else
         OAUTH_ACCESS_TOKEN_SECRET=$(sed -n 's/oauth_token_secret=\([a-z A-Z 0-9]*\)&.*/\1/p' "$RESPONSE_FILE")
         OAUTH_ACCESS_TOKEN=$(sed -n 's/.*oauth_token=\([a-z A-Z 0-9]*\).*/\1/p' "$RESPONSE_FILE")
 
-        echo "OAUTH_ACCESS_TOKEN: $OAUTH_ACCESS_TOKEN"
-        echo "OAUTH_ACCESS_TOKEN_SECRET: $OAUTH_ACCESS_TOKEN_SECRET"
-
         if [[ $OAUTH_ACCESS_TOKEN != "" && $OAUTH_ACCESS_TOKEN_SECRET != "" ]]; then
             # now get dropbox user id
             echo -ne " OK\n"
@@ -215,8 +237,9 @@ else
             check_http_response
 
             if grep -q "^HTTP/1.1 200 OK" "$RESPONSE_FILE"; then
-                UID=$(sed -n 's/.*"uid": \([0-9]*\).*/\1/p' "$RESPONSE_FILE")
-                echo "UID=$UID" >> "$CONFIG_FILE"
+                uid=$(sed -n 's/.*"uid": \([0-9]*\).*/\1/p' "$RESPONSE_FILE")
+                echo "uid=$uid" >> "$CONFIG_FILE"
+                echo "https://dl.dropboxusercontent.com/u/$uid/droploy/$PROJECT_NAME$TARGET_SUFFIX/index.html"
             else
                 echo -ne " FAILED\n"
                 ERROR_STATUS=1
@@ -231,7 +254,12 @@ else
     fi
 fi
 
-echo -ne "https://dl.dropboxusercontent.com/u/$UID/droploy/$PROJECT_NAME$TARGET_SUFFIX/index.html"
+if [ $ERROR_STATUS -eq 0 ]
+then
+    echo ""
+    echo "> Share link: (Syncing...)"
+    echo "https://dl.dropboxusercontent.com/u/$uid/droploy/$PROJECT_NAME$TARGET_SUFFIX/$INDEX_FILE"
+fi
 
 # remove_temp_files
 exit $ERROR_STATUS
