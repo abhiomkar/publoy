@@ -1,15 +1,15 @@
 <!doctype html>
 <html>
 <head>
-	<meta charset="utf-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-	<link rel="shortcut icon" href="favicon.ico">
-	<link rel="stylesheet" href="style.css">
+  <link rel="shortcut icon" href="favicon.ico">
+  <link rel="stylesheet" href="style.css">
 
 
-		<title>Droploy - Command line tool to deploy your static webapps via Dropbox</title>
+    <title>Droploy - Command line tool to deploy your static webapps via Dropbox</title>
 
 
 <style>
@@ -85,18 +85,18 @@ button.github a {
 }
 
 .demo {
-	margin-top: 50px;
-	text-align: center;
+  margin-top: 50px;
+  text-align: center;
 }
 
 .demo a {
-	color: #5badf0;
+  color: #5badf0;
   font-size: 22px;
   font-weight: 300;
 }
 
 .twitter {
-  margin-top: 120px;
+  margin-top: 40px;
   text-align: center;
 }
 
@@ -108,7 +108,7 @@ button.github a {
 
 footer {
   color: #aaa;
-  margin-top: 80px;
+  margin-top: 55px;
   text-align: center;
   font-size: 13px;
   font-weight: 500;
@@ -126,17 +126,29 @@ footer a {
 
 <body>
 
-	<section id="wrapper">
-		<header id="header">
+  <section id="wrapper">
+    <header id="header">
       <h1 class="main-title">Droploy</h1>
       <h3 class="main-description">Command line tool to deploy your static webapps via Dropbox</h3>
-		</header>
+    </header>
 
     <div class="lines">
       <h4>Installation</h4>
       <div>
-        <pre>brew install droploy</pre>
+        <pre><b>$</b> brew install droploy</pre>
       </div>
+
+      <h4>Usage</h4>
+      <div>
+<pre><b>➜ ~/www/save-martian $</b> droploy
+
+>>> Droploying...
+>>> Syncing to Dropbox...
+>>> done.
+
+> Share link: (Syncing...)
+https://dl.dropboxusercontent.com/u/1218282/droploy/save-martian/index.html
+</pre>
     </div>
 
     <div class="buttons">
@@ -144,16 +156,12 @@ footer a {
       <button class="github"><a href="https://github.com/abhiomkar/droploy">Github</a></button>
     </div>
 
-		<div class="demo">
-      <a href="http://blog.abhiomkar.in">Live Demo</a>
-		</div>
-
     <div class="twitter">
       <a href="http://twitter.com/abhiomkar">Follow @abhiomkar</a>
     </div>
 
     <footer>Made by <a href="http://abhiomkar.in">Abhinay Omkar</a></footer>
-	</section>
+  </section>
 
 <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
