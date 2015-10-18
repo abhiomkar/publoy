@@ -220,7 +220,7 @@ else
     OAUTH_TOKEN=$(sed -n 's/.*oauth_token=\([a-z A-Z 0-9]*\)/\1/p' "$RESPONSE_FILE")
 
     if [[ $OAUTH_TOKEN != "" && $OAUTH_TOKEN_SECRET != "" ]]; then
-        echo -ne "\n Please open the following URL in your browser, and allow Publoyer\n"
+        echo -ne "\n\n Please open the following URL in your browser, and allow Publoyer\n"
         echo -ne " to access your Dropbox Public folder:\n\n --> ${API_USER_AUTH_URL}?oauth_token=$OAUTH_TOKEN\n"
         echo -ne "\nPress enter when done...\n"
         read
@@ -241,7 +241,6 @@ else
             if grep -q "^HTTP/1.1 200 OK" "$RESPONSE_FILE"; then
                 uid=$(sed -n 's/.*"uid": \([0-9]*\).*/\1/p' "$RESPONSE_FILE")
                 echo "uid=$uid" >> "$CONFIG_FILE"
-                echo "https://dl.dropboxusercontent.com/u/$uid/publoy/$PROJECT_NAME$TARGET_SUFFIX/index.html"
             else
                 echo -ne " FAILED\n"
                 ERROR_STATUS=1
