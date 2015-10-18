@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# ~/.zshrc, ~/.bashrc
+SHELL_RC_FILE="$HOME/.$(basename $SHELL)rc"
+
+IFS=':' read -ra PATHS <<< "$PATH"
+
+for p in "${PATHS[@]}"; do
+	if [[ $p != "$HOME/bin" && $p != "~/bin" ]]
+	then
+		echo 'export PATH=$PATH:$HOME/bin' >> $SHELL_RC_FILE
+	fi
+done
+
+curl -k -o $HOME/bin/publoy "https://raw.githubusercontent.com/abhiomkar/publoy/master/publoy" && echo -e "\n>>> Installation successful"

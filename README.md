@@ -1,23 +1,23 @@
-# Droploy
+# Publoy
 
 Command line tool to deploy your webapps via Dropbox
 
 Installation
 ------------
 
-    $ brew install droploy
+    $ curl -k https://raw.githubusercontent.com/abhiomkar/publoy/master/install | /bin/bash
 
 Usage
 -----
 
-    ➜ ~/www/save-martian $ droploy
+    ➜ ~/www/save-martian $ publoy
 
-    >>> Droploying...
+    >>> Publoying...
     >>> Syncing to Dropbox...
     >>> done.
 
     > Share link: (Syncing...)
-    https://dl.dropboxusercontent.com/u/1218282/droploy/save-martian/index.html
+    https://dl.dropboxusercontent.com/u/1218282/publoy/save-martian/index.html
 
 Author
 ------

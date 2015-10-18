@@ -1,32 +1,32 @@
 #!/bin/bash
-# ~/Dropbox/Public/droploy/.droploy
+# ~/Dropbox/Public/publoy/.publoy
 # [{
 # 	project: "save-martian",
 # 	source: "~/code/save-martian",
-# 	target: "~/Dropbox/Public/droploy/save-martian"
+# 	target: "~/Dropbox/Public/publoy/save-martian"
 # },
 # {
 # 	project: "save-martian",
 # 	source: "~/Sites/save-martian",
-# 	target: "~/Dropbox/Public/droploy/save-martian-1"
+# 	target: "~/Dropbox/Public/publoy/save-martian-1"
 # },
 # {
 # 	project: "save-martian",
 # 	source: "~/www/save-martian",
-# 	target: "~/Dropbox/Public/droploy/save-martian-2" <-- where '2' is calculated as - count('project:save-martian')
+# 	target: "~/Dropbox/Public/publoy/save-martian-2" <-- where '2' is calculated as - count('project:save-martian')
 # }]
 
-# ~/code/save-martian $ droploy --> ~/Dropbox/Public/droploy/save-martian
-# ~/Sites/save-martian $ droploy --> ~/Dropbox/Public/droploy/save-martian-1
-# ~/www/save-martian $ droploy --> ~/Dropbox/Public/droploy/save-martian-2
+# ~/code/save-martian $ publoy --> ~/Dropbox/Public/publoy/save-martian
+# ~/Sites/save-martian $ publoy --> ~/Dropbox/Public/publoy/save-martian-1
+# ~/www/save-martian $ publoy --> ~/Dropbox/Public/publoy/save-martian-2
 
 # check if dropbox is installed
 # check if rsync command is available
 
-# create a folder 'droploy' in ~/Dropbox/Public if not exists
-# create a new file in the above folder called '.droploy' if not exists
-# read .droploy, if project folder path in this file matches with the original project folder then proceed with sync
-# if the folder path not found in .droploy file then create a new entry where source: original project path, target: ~/Dropbox/Public/droploy/<project_name>((project_name exists) ? '-$count('project:project_name') : '')
+# create a folder 'publoy' in ~/Dropbox/Public if not exists
+# create a new file in the above folder called '.publoy' if not exists
+# read .publoy, if project folder path in this file matches with the original project folder then proceed with sync
+# if the folder path not found in .publoy file then create a new entry where source: original project path, target: ~/Dropbox/Public/publoy/<project_name>((project_name exists) ? '-$count('project:project_name') : '')
 # create a new folder $target
 # sync project folder $ rsync -av . $target
 # get Dropbox share link of $target
@@ -34,7 +34,7 @@
 
 # Good to have
 
-# able to clone & sync projects from droploy on other computers
+# able to clone & sync projects from publoy on other computers
 
 API_REQUEST_TOKEN_URL="https://api.dropbox.com/1/oauth/request_token"
 API_ACCESS_TOKEN_URL="https://api.dropbox.com/1/oauth/access_token"
@@ -42,7 +42,7 @@ API_USER_AUTH_URL="https://www.dropbox.com/1/oauth/authorize"
 API_INFO_URL="https://api.dropbox.com/1/account/info"
 APPKEY=1vn4mbkqqsxf3ds
 APPSECRET=di4ey3zcej6741k
-RESPONSE_FILE=/tmp/droploy_response
+RESPONSE_FILE=/tmp/publoy_response
 ERROR_STATUS=0
 
 function utime
@@ -124,7 +124,7 @@ function check_http_response
 
 }
 
-# create droploy supporting files & folders
+# create publoy supporting files & folders
 DROPBOX_ROOT="$HOME/Dropbox"
 if [ ! -d $DROPBOX_ROOT ]
 then
@@ -134,38 +134,40 @@ then
     exit $ERROR_STATUS
 fi
 
-echo ">>> Droploying..."
+echo ">>> Publoying..."
 
 PUBLIC_ROOT="$HOME/Dropbox/Public"
 [ ! -d $PUBLIC_ROOT ] && mkdir -p $PUBLIC_ROOT
-[ ! -d $DROPLOY_ROOT ] && mkdir -p $DROPLOY_ROOT
-DROPLOY_ROOT="$HOME/Dropbox/Public/droploy"
-DROPLOY_METAFILE=$DROPLOY_ROOT'/.droploy'
-CONFIG_FILE=$DROPLOY_ROOT'/.droploy_config'
-[ ! -d $DROPLOY_ROOT ] && mkdir -p $DROPLOY_ROOT
-[ ! -f $DROPLOY_METAFILE ] && touch $DROPLOY_METAFILE
+[ ! -d $PUBLOY_ROOT ] && mkdir -p $PUBLOY_ROOT
+PUBLOY_ROOT="$HOME/Dropbox/Public/publoy"
+PUBLOY_METAFILE=$PUBLOY_ROOT'/.publoy'
+CONFIG_FILE=$PUBLOY_ROOT'/.publoy_config'
+[ ! -d $PUBLOY_ROOT ] && mkdir -p $PUBLOY_ROOT
+[ ! -f $PUBLOY_METAFILE ] && touch $PUBLOY_METAFILE
 [ ! -f $CONFIG_FILE ] && touch $CONFIG_FILE
 
-# Info about Project Name, Source & Target - save it to .droploy file if necessary
+# Info about Project Name, Source & Target - save it to .publoy file if necessary
 PROJECT_NAME=$(basename `pwd`)
 SOURCE=$(pwd)
 PROJECT_NAME_COUNT=0
-# TARGET=$DROPLOY_ROOT'/'$PROJECT_NAME
+# TARGET=$PUBLOY_ROOT'/'$PROJECT_NAME
 
 while IFS='' read -r line || [[ -n "$line" ]]; do
     IFS=':' read -ra FIELDS <<< "$line"
+
     if [ ${FIELDS[0]} == $PROJECT_NAME ]
     then
     	PROJECT_NAME_COUNT=$(($PROJECT_NAME_COUNT+1))
     fi
-		for i in "${FIELDS[@]}"; do
-			if [ ${FIELDS[1]} == $SOURCE ]
-			then
-				TARGET=${FIELDS[2]}
-			fi
-		done
-		IFS=''
-done < $DROPLOY_METAFILE
+
+	for i in "${FIELDS[@]}"; do
+		if [ ${FIELDS[1]} == $SOURCE ]
+		then
+			TARGET=${FIELDS[2]}
+		fi
+	done
+	IFS=''
+done < $PUBLOY_METAFILE
 
 if [ -z $TARGET ]
 then
@@ -175,9 +177,9 @@ then
 	else
 		TARGET_SUFFIX="-$PROJECT_NAME_COUNT"
 	fi
-	TARGET=$DROPLOY_ROOT'/'$PROJECT_NAME$TARGET_SUFFIX
+	TARGET=$PUBLOY_ROOT'/'$PROJECT_NAME$TARGET_SUFFIX
 
-	echo "$PROJECT_NAME:$SOURCE:$TARGET" >> $DROPLOY_METAFILE
+	echo "$PROJECT_NAME:$SOURCE:$TARGET" >> $PUBLOY_METAFILE
 fi
 
 if [ -f "$SOURCE/index.html" ]
@@ -218,7 +220,7 @@ else
     OAUTH_TOKEN=$(sed -n 's/.*oauth_token=\([a-z A-Z 0-9]*\)/\1/p' "$RESPONSE_FILE")
 
     if [[ $OAUTH_TOKEN != "" && $OAUTH_TOKEN_SECRET != "" ]]; then
-        echo -ne "\n Please open the following URL in your browser, and allow Droployer\n"
+        echo -ne "\n Please open the following URL in your browser, and allow Publoyer\n"
         echo -ne " to access your Dropbox Public folder:\n\n --> ${API_USER_AUTH_URL}?oauth_token=$OAUTH_TOKEN\n"
         echo -ne "\nPress enter when done...\n"
         read
@@ -239,7 +241,7 @@ else
             if grep -q "^HTTP/1.1 200 OK" "$RESPONSE_FILE"; then
                 uid=$(sed -n 's/.*"uid": \([0-9]*\).*/\1/p' "$RESPONSE_FILE")
                 echo "uid=$uid" >> "$CONFIG_FILE"
-                echo "https://dl.dropboxusercontent.com/u/$uid/droploy/$PROJECT_NAME$TARGET_SUFFIX/index.html"
+                echo "https://dl.dropboxusercontent.com/u/$uid/publoy/$PROJECT_NAME$TARGET_SUFFIX/index.html"
             else
                 echo -ne " FAILED\n"
                 ERROR_STATUS=1
@@ -258,7 +260,7 @@ if [ $ERROR_STATUS -eq 0 ]
 then
     echo ""
     echo "> Share link: (Syncing...)"
-    echo "https://dl.dropboxusercontent.com/u/$uid/droploy/$PROJECT_NAME$TARGET_SUFFIX/$INDEX_FILE"
+    echo "https://dl.dropboxusercontent.com/u/$uid/publoy/$PROJECT_NAME$TARGET_SUFFIX/$INDEX_FILE"
 fi
 
 # remove_temp_files
