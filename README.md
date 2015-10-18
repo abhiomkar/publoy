@@ -5,7 +5,7 @@ Command line tool to deploy your webapps via Dropbox
 Installation
 ------------
 
-    $ curl -k https://raw.githubusercontent.com/abhiomkar/publoy/master/install | /bin/bash
+    $ curl -sSLk https://raw.githubusercontent.com/abhiomkar/publoy/master/install | /bin/bash
 
 Usage
 -----
