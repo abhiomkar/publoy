@@ -17,4 +17,5 @@ then
 	echo 'export PATH=$PATH:$HOME/bin' >> $SHELL_RC_FILE
 fi
 
-curl -sSLk -o $HOME/bin/publoy "https://raw.githubusercontent.com/abhiomkar/publoy/master/publoy" && echo -e "\n>>> Installation successful"
+curl -sSLk -o $HOME/bin/publoy "https://raw.githubusercontent.com/abhiomkar/publoy/master/publoy" && echo -e ">>> Installation successful"
+chmod +x $HOME/bin/publoy
