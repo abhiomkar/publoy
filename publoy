@@ -33,95 +33,14 @@
 
 
 # Good to have
-
+# TODO
 # able to clone & sync projects from publoy on other computers
 
-API_REQUEST_TOKEN_URL="https://api.dropbox.com/1/oauth/request_token"
-API_ACCESS_TOKEN_URL="https://api.dropbox.com/1/oauth/access_token"
-API_USER_AUTH_URL="https://www.dropbox.com/1/oauth/authorize"
-API_INFO_URL="https://api.dropbox.com/1/account/info"
-APPKEY=1vn4mbkqqsxf3ds
-APPSECRET=di4ey3zcej6741k
-RESPONSE_FILE=/tmp/publoy_response
 ERROR_STATUS=0
 
 function utime
 {
     echo $(date +%s)
-}
-
-function print
-{
-    echo -ne "$1";
-}
-
-#Remove temporary files
-function remove_temp_files
-{
-    rm -fr "$RESPONSE_FILE"
-}
-
-function check_http_response
-{
-    CODE=$?
-
-    #Checking curl exit code
-    case $CODE in
-
-        #OK
-        0)
-
-        ;;
-
-        #Proxy error
-        5)
-            print "\nError: Couldn't resolve proxy. The given proxy host could not be resolved.\n"
-
-            remove_temp_files
-            exit 1
-        ;;
-
-        #Missing CA certificates
-        60|58)
-            print "\nError: cURL is not able to performs peer SSL certificate verification.\n"
-            print "Please, install the default ca-certificates bundle.\n"
-            print "To do this in a Debian/Ubuntu based system, try:\n"
-            print "  sudo apt-get install ca-certificates\n\n"
-            print "If the problem persists, try to use the -k option (insecure).\n"
-
-            remove_temp_files
-            exit 1
-        ;;
-
-        6)
-            print "\nError: Couldn't resolve host.\n"
-
-            remove_temp_files
-            exit 1
-        ;;
-
-        7)
-            print "\nError: Couldn't connect to host.\n"
-
-            remove_temp_files
-            exit 1
-        ;;
-
-    esac
-
-    #Checking response file for generic errors
-    if grep -q "HTTP/1.1 400" "$RESPONSE_FILE"; then
-        ERROR_MSG=$(sed -n -e 's/{"error": "\([^"]*\)"}/\1/p' "$RESPONSE_FILE")
-
-        case $ERROR_MSG in
-             *access?attempt?failed?because?this?app?is?not?configured?to?have*)
-                echo -e "\nError: The Permission type/Access level configured doesn't match the DropBox App settings!\nPlease run \"$0 unlink\" and try again."
-                exit 1
-            ;;
-        esac
-
-    fi
-
 }
 
 # create publoy supporting files & folders
@@ -140,9 +59,11 @@ PUBLIC_ROOT="$HOME/Dropbox/Public"
 [ ! -d $PUBLIC_ROOT ] && mkdir -p $PUBLIC_ROOT
 [ ! -d $PUBLOY_ROOT ] && mkdir -p $PUBLOY_ROOT
 PUBLOY_ROOT="$HOME/Dropbox/Public/publoy"
+PUBLOY_LINKFILE=$PUBLOY_ROOT'/publoy_link'
 PUBLOY_METAFILE=$PUBLOY_ROOT'/.publoy'
 CONFIG_FILE=$PUBLOY_ROOT'/.publoy_config'
 [ ! -d $PUBLOY_ROOT ] && mkdir -p $PUBLOY_ROOT
+[ ! -f $PUBLOY_LINKFILE ] && touch $PUBLOY_LINKFILE
 [ ! -f $PUBLOY_METAFILE ] && touch $PUBLOY_METAFILE
 [ ! -f $CONFIG_FILE ] && touch $CONFIG_FILE
 
@@ -211,44 +132,22 @@ then
     source "$CONFIG_FILE" 2>/dev/null
 else
     # first time the user is running the script
-    echo -ne "\nThis is the first time you run this script. Talking to Dropbox, Please wait..."
+    echo -ne "\nThis is the first time you run this script."
 
-    curl -k -s --show-error --globoff -i -o "$RESPONSE_FILE" --data "oauth_consumer_key=$APPKEY&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM" "$API_REQUEST_TOKEN_URL" 2> /dev/null
+    echo -ne "\n\n Please go to $PUBLOY_ROOT folder, right click on publoy_link file, \n"
+    echo -ne " click on 'Copy Public Link' and paste it here.\n"
+    echo -ne "\nPublic Link: "
+    read PUBLIC_LINK
 
-    check_http_response
-    OAUTH_TOKEN_SECRET=$(sed -n 's/oauth_token_secret=\([a-z A-Z 0-9]*\).*/\1/p' "$RESPONSE_FILE")
-    OAUTH_TOKEN=$(sed -n 's/.*oauth_token=\([a-z A-Z 0-9]*\)/\1/p' "$RESPONSE_FILE")
+    # Sample Public Link:
+    # https://dl.dropboxusercontent.com/u/1234567/publoy/publoy_link
+    # now get dropbox user id from PUBLIC_LINK
+    re="https:\/\/dl.dropboxusercontent.com\/u\/([0-9]+)\/publoy\/publoy_link"
 
-    if [[ $OAUTH_TOKEN != "" && $OAUTH_TOKEN_SECRET != "" ]]; then
-        echo -ne "\n\n Please open the following URL in your browser, and allow Publoyer\n"
-        echo -ne " to access your Dropbox Public folder:\n\n --> ${API_USER_AUTH_URL}?oauth_token=$OAUTH_TOKEN\n"
-        echo -ne "\nPress enter when done...\n"
-        read
-
-        echo -ne " > Access Token request... "
-        curl -k -s --show-error --globoff -i -o "$RESPONSE_FILE" --data "oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM" "$API_ACCESS_TOKEN_URL" 2> /dev/null
-        check_http_response
-        OAUTH_ACCESS_TOKEN_SECRET=$(sed -n 's/oauth_token_secret=\([a-z A-Z 0-9]*\)&.*/\1/p' "$RESPONSE_FILE")
-        OAUTH_ACCESS_TOKEN=$(sed -n 's/.*oauth_token=\([a-z A-Z 0-9]*\).*/\1/p' "$RESPONSE_FILE")
-
-        if [[ $OAUTH_ACCESS_TOKEN != "" && $OAUTH_ACCESS_TOKEN_SECRET != "" ]]; then
-            # now get dropbox user id
-            echo -ne " OK\n"
-
-            curl -k -s --show-error --globoff -i -o "$RESPONSE_FILE" --data "oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_ACCESS_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_ACCESS_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM" "$API_INFO_URL" 2> /dev/null
-            check_http_response
-
-            if grep -q "^HTTP/1.1 200 OK" "$RESPONSE_FILE"; then
-                uid=$(sed -n 's/.*"uid": \([0-9]*\).*/\1/p' "$RESPONSE_FILE")
-                echo "uid=$uid" >> "$CONFIG_FILE"
-            else
-                echo -ne " FAILED\n"
-                ERROR_STATUS=1
-            fi
-        else
-            echo -ne " FAILED\n"
-            ERROR_STATUS=1
-        fi
+    if [[ $PUBLIC_LINK =~ $re ]]; then
+        uid=${BASH_REMATCH[1]}
+        echo "uid=$uid" >> "$CONFIG_FILE"
+        echo -ne "> Saved uid in publoy config file.\n"
     else
         echo -ne " FAILED\n"
         ERROR_STATUS=1
@@ -262,5 +161,4 @@ then
     echo "https://dl.dropboxusercontent.com/u/$uid/publoy/$PROJECT_NAME$TARGET_SUFFIX/$INDEX_FILE"
 fi
 
-# remove_temp_files
 exit $ERROR_STATUS
